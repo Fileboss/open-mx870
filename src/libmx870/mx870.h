@@ -84,6 +84,9 @@ int mx870_job_start(mx870_job_t *job);
 int mx870_job_end(mx870_job_t *job);
 void mx870_job_free(mx870_job_t *job);
 
+/* Diagnostics: force the raster lines per ESC (F block (1..255); 0 = automatic. */
+void mx870_job_set_lines_per_block(mx870_job_t *job, int lines);
+
 /*
  * Page lifecycle. After mx870_page_start, query the raster geometry the
  * encoder expects, then feed exactly `height` lines of `width` pixels.

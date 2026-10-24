@@ -35,7 +35,7 @@ PPD     := $(BUILD)/canon-mx870.ppd
 
 .PHONY: all app app-test check e2e net install uninstall clean distclean
 
-all: $(LIB) $(BUILD)/rastertomx870 $(PPD) $(BUILD)/mx870-bjnp
+all: $(LIB) $(BUILD)/rastertomx870 $(PPD) $(BUILD)/mx870-bjnp $(BUILD)/mx870-testpage
 
 $(BUILD)/libbjnp.o: src/libbjnp/bjnp.c src/libbjnp/bjnp.h
 	@mkdir -p $(BUILD)
@@ -92,6 +92,9 @@ $(LIB): $(LIB_OBJ)
 
 $(BUILD)/rastertomx870: src/cups/rastertomx870.c $(LIB)
 	$(CC) $(CFLAGS) $(ARCHFLAGS) -Wno-deprecated-declarations $< $(LIB) -lcups -o $@
+
+$(BUILD)/mx870-testpage: src/tools/mx870-testpage.c $(LIB)
+	$(CC) $(CFLAGS) $(ARCHFLAGS) $< $(LIB) -o $@
 
 $(BUILD)/test_mx870: tests/test_mx870.c $(LIB)
 	$(CC) $(CFLAGS) $(ARCHFLAGS) $< $(LIB) -o $@

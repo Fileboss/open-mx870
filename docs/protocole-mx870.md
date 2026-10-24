@@ -220,8 +220,16 @@ Les flux produits sont validés par `tools/bjdump.py` (décodeur indépendant).
 - défauts, avec une vérification des buses impeccable, donc dus au flux : fines lignes blanches
   horizontales régulières dans toutes les encres, en brouillon comme en qualité haute ; quelques
   lignes de couleur déposées 2 à 3 mm hors de leur zone alors que les plans du flux sont alignés ;
-  excès d'encre (papier gondolé, tons trop sombres, bleu violacé). Pistes : lignes par bloc
-  (`ESC (J`), puis limite d'encre et courbes de densité du papier ordinaire.
+  excès d'encre (papier gondolé, tons trop sombres, bleu violacé) ;
+- mires `build/mx870-testpage` : la qualité **standard** (C/M 3 niveaux sur 2 bits) sort
+  propre, sans lignes ni débordement ; le brouillon montre quelques lignes blanches isolées ;
+  seule la qualité **haute** (C/M 6 niveaux sur 4 bits) produit les lignes régulières, au pas
+  d'un bloc de 16 lignes (0,68 mm), à toutes les intensités, alors que chaque ligne du bloc
+  s'imprime ; 8 lignes par bloc à 600 dpi double la hauteur de la page (l'imprimante avance de
+  16 lignes par bloc) ;
+- piste : `cnmop9z.dll` convertit les niveaux de trame en codes de point par les tables de
+  `0x66526088` (`00 00 01 03 03 06 06 04 09 09`, `00 01 01 01 03 03 06 09 08 0b`…), que
+  l'encodeur n'applique pas : il envoie le niveau tel quel.
 
 Choix non confirmés par les octets Windows :
 

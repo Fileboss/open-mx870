@@ -129,6 +129,11 @@ mx870_job_t *mx870_job_new(mx870_write_fn write, void *ctx)
   return job;
 }
 
+void mx870_job_set_lines_per_block(mx870_job_t *job, int lines)
+{
+  job->forced_lines = lines > 0 && lines < 256 ? lines : 0;
+}
+
 int mx870_job_start(mx870_job_t *job)
 {
   job->started = 1;
@@ -308,7 +313,7 @@ int mx870_page_start(mx870_job_t *job, const mx870_page_settings_t *settings)
     return -1;
 
   job->dpi = job->mode->dpi;
-  job->lines_per_block = job->dpi >= 600 ? 16 : 8;
+  job->lines_per_block = job->forced_lines ? job->forced_lines : job->dpi >= 600 ? 16 : 8;
   if (page_area(settings, &ax, &ay, &aw, &al))
     return -1;
   job->x0 = ax;

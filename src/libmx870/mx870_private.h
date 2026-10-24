@@ -69,6 +69,7 @@ struct mx870_job_s {
   void *ctx;
   int started, page_open, pages;
   int send_esc_r;         /* Gutenprint sends ESC (r 0x64; not seen in Windows templates */
+  int forced_lines;       /* lines per block set by the caller, 0 = automatic */
 
   mx870_page_settings_t settings;
   const mx870_mode_t *mode;
