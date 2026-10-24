@@ -14,7 +14,7 @@ Windows 1.06 (voir [docs/protocole-mx870.md](docs/protocole-mx870.md)).
 > corrigées à l'œil pour le papier ordinaire (avec des encres compatibles) : justes dans
 > l'ensemble, un peu ternes. Restent : très légères lignes sur le noir en qualité haute,
 > papiers photo non essayés.
-> Détails au §5 du document de protocole.
+> Détails au §5 du document de protocole ; ce qui manque : [ROADMAP.md](ROADMAP.md).
 
 ## Apportez votre propre pilote Canon
 
