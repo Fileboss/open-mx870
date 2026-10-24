@@ -194,7 +194,7 @@ manipule aussi des commandes XML IVEC (`StartJob`, `VendorCmd/ModeShift`, `EndJo
 
 | Code | Transport | Charge utile | Rôle [inf] |
 |---|---|---|---|
-| `0x01` | UDP | — | découverte |
+| `0x01` | UDP | — | découverte (diffusion) ; l'hôte `auto` du client choisit la première réponse dont l'identifiant contient `MDL:MX870`, garde son adresse et relance la découverte si elle ne répond plus |
 | `0x30` | UDP | — | identifiant IEEE 1284 |
 | `0x10` | UDP | 392 o : 4+4 o, nom machine (64 o UTF‑16), utilisateur (64 o), titre (256 o) | ouverture du travail ; la réponse donne la session (en-tête, offset 10). Occupée par un autre travail, l'imprimante ne répond pas mais répond toujours à `0x30` : le client réessaie toutes les 2 s, jusqu'à 30 min |
 | `0x21` | TCP | données d'impression | réponse : u32 = octets acceptés ; 0 → occupé, réessai toutes les 500 ms, abandon après 10 s sous Windows (5 min ici : le démarrage à froid est plus long) |

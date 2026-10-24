@@ -12,6 +12,7 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <poll.h>
+#include <pthread.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -37,6 +38,7 @@
 #define UDP_TRIES 3
 #define OPEN_RETRY_MS 2000      /* a printer busy with another job ignores job requests */
 #define OPEN_TIMEOUT_MS 1800000 /* ... until that job ends: wait up to 30 min */
+#define DISCOVER_MS 1500
 
 struct bjnp_job_s {
   struct sockaddr_storage addr;
@@ -170,6 +172,15 @@ int bjnp_get_device_id(const char *host, char *id, size_t idlen, int timeout_ms)
   long n;
   unsigned len;
 
+  if (!strcmp(host, BJNP_AUTO)) {
+    char found[64];
+
+    if (!bjnp_find_printer(found, sizeof(found), 0) &&
+        !bjnp_get_device_id(found, id, idlen, timeout_ms))
+      return 0;
+    return bjnp_find_printer(found, sizeof(found), 1) ? -1
+           : bjnp_get_device_id(found, id, idlen, timeout_ms);
+  }
   if (resolve(host, &addr, &addrlen, SOCK_DGRAM))
     return -1;
   n = udp_exchange(&addr, addrlen, CMD_GET_ID, 0, NULL, 0, resp, sizeof(resp), timeout_ms);
@@ -244,6 +255,30 @@ int bjnp_discover(bjnp_printer_t *printers, int max, int timeout_ms)
   return found;
 }
 
+int bjnp_find_printer(char *host, size_t hostlen, int refresh)
+{
+  static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+  static char cached[64];
+  int rc = -1;
+
+  pthread_mutex_lock(&lock);
+  if (refresh || !cached[0]) {
+    bjnp_printer_t p[16];
+    int n = bjnp_discover(p, 16, DISCOVER_MS);
+
+    cached[0] = '\0';
+    for (int i = 0; i < n && !cached[0]; i++)
+      if (strstr(p[i].device_id, "MDL:MX870"))
+        snprintf(cached, sizeof(cached), "%s", p[i].host);
+  }
+  if (cached[0]) {
+    snprintf(host, hostlen, "%s", cached);
+    rc = 0;
+  }
+  pthread_mutex_unlock(&lock);
+  return rc;
+}
+
 static void set_error(bjnp_job_t *job, const char *fmt, ...)
 {
   va_list ap;
@@ -275,16 +310,24 @@ bjnp_job_t *bjnp_job_open(const char *host, const char *user, const char *title,
 {
   bjnp_job_t *job = calloc(1, sizeof(*job));
   uint8_t details[392] = {0}, resp[HDR_LEN + 64];
-  char hostname[64] = "", id[64];
+  char hostname[64] = "", id[64], found[64];
   struct timespec start, now;
   long n;
-  int one = 1;
+  int one = 1, is_auto = !strcmp(host, BJNP_AUTO), rediscovered = 0;
 
   if (!job) {
     snprintf(err, errlen, "out of memory");
     return NULL;
   }
   job->tcp = -1;
+  if (is_auto) {
+    if (bjnp_find_printer(found, sizeof(found), 0)) {
+      snprintf(err, errlen, "no Canon MX870 found on the local network (BJNP discovery)");
+      free(job);
+      return NULL;
+    }
+    host = found;
+  }
   if (resolve(host, &job->addr, &job->addrlen, SOCK_DGRAM)) {
     snprintf(err, errlen, "cannot resolve %s", host);
     free(job);
@@ -304,6 +347,10 @@ bjnp_job_t *bjnp_job_open(const char *host, const char *user, const char *title,
       break;
     /* Silence while the printer still identifies itself means "busy with another job". */
     if (bjnp_get_device_id(host, id, sizeof(id), 1000)) {
+      /* Auto: the cached address may be stale (DHCP); look again, once. */
+      if (is_auto && !rediscovered++ && !bjnp_find_printer(found, sizeof(found), 1) &&
+          !resolve(found, &job->addr, &job->addrlen, SOCK_DGRAM))
+        continue;
       snprintf(err, errlen, "%s did not answer the BJNP job request (UDP %d)", host, BJNP_PORT);
       free(job);
       return NULL;

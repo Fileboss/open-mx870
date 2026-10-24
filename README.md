@@ -46,10 +46,15 @@ reconstitue donc les tables depuis le pilote qu'il a lui-même obtenu auprès de
 
 ```sh
 ./install.sh mp68-win-mx870-1_06-ea24.exe                         # pilote CUPS classique
-./install.sh --printer 192.168.1.20 mp68-win-mx870-1_06-ea24.exe  # + impression réseau
-./install.sh --app --printer 192.168.1.20 mp68-win-mx870-1_06-ea24.exe   # + application AirPrint
+./install.sh --printer auto mp68-win-mx870-1_06-ea24.exe          # + impression réseau
+./install.sh --app --printer auto mp68-win-mx870-1_06-ea24.exe    # + application AirPrint
 ./install.sh --no-install mp68-win-mx870-1_06-ea24.exe            # construire et tester seulement
 ```
+
+`--printer auto` retrouve la MX870 sur le réseau local (découverte BJNP) à la première
+impression, garde son adresse et la recherche de nouveau si elle ne répond plus, par exemple
+après un changement d'adresse attribué par la box. `--printer 192.168.1.20` fixe l'adresse.
+L'application AirPrint accepte de même `bjnp://auto`.
 
 Prérequis : macOS sur Apple Silicon, les outils en ligne de commande Xcode
 (`xcode-select --install`), Python 3. Pour l'application AirPrint :

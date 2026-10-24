@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!-- Classic CUPS driver over the network: relays socket://127.0.0.1:9870 to the
-     printer over BJNP. Replace PRINTER_IP, then:
+     printer over BJNP. Replace PRINTER_IP with the printer address, or with
+     "auto" to find it on the network at each job (survives address changes), then:
      sudo cp org.mx870.bjnp-relay.plist /Library/LaunchDaemons/
      sudo install -o nobody -g nobody -m 644 /dev/null /var/log/mx870-bjnp-relay.log
      sudo launchctl bootstrap system /Library/LaunchDaemons/org.mx870.bjnp-relay.plist -->

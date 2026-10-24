@@ -9,7 +9,8 @@
 # Options:
 #   --cups            install the classic CUPS driver (default)
 #   --app             also build and install the AirPrint application (PAPPL)
-#   --printer IP      also set up printing to this network address:
+#   --printer IP      also set up printing to this network address, or "auto"
+#                     to find the MX870 on the network at each job:
 #                       CUPS: BJNP relay (LaunchDaemon) + queue "MX870"
 #                       app:  prints the commands to add the printer
 #   --no-install      build and test only, install nothing
@@ -85,7 +86,7 @@ sudo make -s install
 
 if [ -n "$printer" ] && [ $want_app = 0 ]; then
   step "Setting up network printing to $printer (CUPS + BJNP relay)"
-  /Library/Printers/Canon-MX870/bin/mx870-bjnp id "$printer" || echo "warning: $printer did not answer (BJNP, UDP 8611); continuing"
+  /Library/Printers/Canon-MX870/bin/mx870-bjnp id "$printer" || echo "warning: no answer from $printer (BJNP, UDP 8611); continuing"
   plist=/Library/LaunchDaemons/org.mx870.bjnp-relay.plist
   sed "s/PRINTER_IP/$printer/" packaging/org.mx870.bjnp-relay.plist > build/org.mx870.bjnp-relay.plist
   sudo launchctl bootout system "$plist" 2> /dev/null || true

@@ -17,6 +17,13 @@ extern "C" {
 
 #define BJNP_PORT 8611
 
+/*
+ * Host name meaning "the Canon MX870 on the local network": found by BJNP
+ * discovery on first use, then cached; discovery runs again when the cached
+ * address stops answering (for example after a DHCP change).
+ */
+#define BJNP_AUTO "auto"
+
 typedef struct {
   char host[64];          /* numeric address */
   char device_id[1024];   /* IEEE 1284 device ID, may be empty */
@@ -27,10 +34,13 @@ typedef struct bjnp_job_s bjnp_job_t;
 /* Broadcast discovery on all IPv4 interfaces; returns the number found. */
 int bjnp_discover(bjnp_printer_t *printers, int max, int timeout_ms);
 
-/* Read the IEEE 1284 device ID of the printer at host. Returns 0 on success. */
+/* Find the MX870 on the local network (cached unless refresh). Returns 0 on success. */
+int bjnp_find_printer(char *host, size_t hostlen, int refresh);
+
+/* Read the IEEE 1284 device ID of the printer at host (or BJNP_AUTO). Returns 0 on success. */
 int bjnp_get_device_id(const char *host, char *id, size_t idlen, int timeout_ms);
 
-/* Open a print session; err receives a message on failure. */
+/* Open a print session with host (or BJNP_AUTO); err receives a message on failure. */
 bjnp_job_t *bjnp_job_open(const char *host, const char *user, const char *title,
                           char *err, size_t errlen);
 

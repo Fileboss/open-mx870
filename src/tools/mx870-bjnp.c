@@ -8,7 +8,8 @@
  *
  * The relay lets a CUPS queue print through BJNP with a plain socket:// URI:
  * third-party CUPS backends cannot be installed on the sealed macOS system volume.
- * HOST may be "address" or "address:port".
+ * HOST may be "address", "address:port" or "auto" (the MX870 found by BJNP
+ * discovery, looked up again when it stops answering).
  */
 
 #include "../libbjnp/bjnp.h"
@@ -129,8 +130,8 @@ int main(int argc, char **argv)
 
   fprintf(stderr,
           "usage: mx870-bjnp discover\n"
-          "       mx870-bjnp id HOST\n"
+          "       mx870-bjnp id HOST|auto\n"
           "       mx870-bjnp send HOST FILE|- [TITLE]\n"
-          "       mx870-bjnp relay HOST [LISTEN_PORT]\n");
+          "       mx870-bjnp relay HOST|auto [LISTEN_PORT]\n");
   return 2;
 }
