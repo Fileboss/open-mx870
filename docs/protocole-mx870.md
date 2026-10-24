@@ -196,7 +196,7 @@ manipule aussi des commandes XML IVEC (`StartJob`, `VendorCmd/ModeShift`, `EndJo
 |---|---|---|---|
 | `0x01` | UDP | — | découverte |
 | `0x30` | UDP | — | identifiant IEEE 1284 |
-| `0x10` | UDP | 392 o : 4+4 o, nom machine (64 o UTF‑16), utilisateur (64 o), titre (256 o) | ouverture du travail ; la réponse donne la session (en-tête, offset 10) |
+| `0x10` | UDP | 392 o : 4+4 o, nom machine (64 o UTF‑16), utilisateur (64 o), titre (256 o) | ouverture du travail ; la réponse donne la session (en-tête, offset 10). Occupée par un autre travail, l'imprimante ne répond pas mais répond toujours à `0x30` : le client réessaie toutes les 2 s, jusqu'à 30 min |
 | `0x21` | TCP | données d'impression | réponse : u32 = octets acceptés ; 0 → occupé, réessai toutes les 500 ms, abandon après 10 s sous Windows (5 min ici : le démarrage à froid est plus long) |
 | `0x20` | TCP | — | lecture bidirectionnelle (statut) |
 | `0x11` | UDP | — | fermeture de la session |

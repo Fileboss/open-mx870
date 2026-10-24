@@ -35,6 +35,8 @@
 #define BUSY_RETRY_MS 500     /* Windows retries a zero acknowledgement every 500 ms */
 #define BUSY_TIMEOUT_MS 300000 /* Windows gives up after 10 s, too short for a cold start */
 #define UDP_TRIES 3
+#define OPEN_RETRY_MS 2000      /* a printer busy with another job ignores job requests */
+#define OPEN_TIMEOUT_MS 1800000 /* ... until that job ends: wait up to 30 min */
 
 struct bjnp_job_s {
   struct sockaddr_storage addr;
@@ -273,7 +275,8 @@ bjnp_job_t *bjnp_job_open(const char *host, const char *user, const char *title,
 {
   bjnp_job_t *job = calloc(1, sizeof(*job));
   uint8_t details[392] = {0}, resp[HDR_LEN + 64];
-  char hostname[64] = "";
+  char hostname[64] = "", id[64];
+  struct timespec start, now;
   long n;
   int one = 1;
 
@@ -293,12 +296,26 @@ bjnp_job_t *bjnp_job_open(const char *host, const char *user, const char *title,
   put_utf16(details + 8, 64, hostname);
   put_utf16(details + 72, 64, user);
   put_utf16(details + 136, 256, title);
-  n = udp_exchange(&job->addr, job->addrlen, CMD_JOB_DETAILS, 0, details, sizeof(details),
-                   resp, sizeof(resp), 3000);
-  if (n < HDR_LEN) {
-    snprintf(err, errlen, "%s did not answer the BJNP job request (UDP %d)", host, BJNP_PORT);
-    free(job);
-    return NULL;
+  clock_gettime(CLOCK_MONOTONIC, &start);
+  for (;;) {
+    n = udp_exchange(&job->addr, job->addrlen, CMD_JOB_DETAILS, 0, details, sizeof(details),
+                     resp, sizeof(resp), 1000);
+    if (n >= HDR_LEN)
+      break;
+    /* Silence while the printer still identifies itself means "busy with another job". */
+    if (bjnp_get_device_id(host, id, sizeof(id), 1000)) {
+      snprintf(err, errlen, "%s did not answer the BJNP job request (UDP %d)", host, BJNP_PORT);
+      free(job);
+      return NULL;
+    }
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    if ((now.tv_sec - start.tv_sec) * 1000 > OPEN_TIMEOUT_MS) {
+      snprintf(err, errlen, "%s busy with another job for more than %d min", host,
+               OPEN_TIMEOUT_MS / 60000);
+      free(job);
+      return NULL;
+    }
+    usleep(OPEN_RETRY_MS * 1000);
   }
   job->session = (uint16_t)get16(resp + 10);
 

@@ -1,6 +1,6 @@
 #!/bin/sh
 # Network path test against tests/fake_bjnp.py (no printer needed):
-#   id, direct send (with "busy" answers), and the CUPS relay path.
+#   id, direct send (with "busy" answers and ignored job requests), and the CUPS relay path.
 # Usage: tests/net.sh BUILD_DIR
 set -eu
 
@@ -10,7 +10,7 @@ port=18611
 rm -rf "$out"
 mkdir -p "$out"
 
-python3 tests/fake_bjnp.py --port $port --busy 2 "$out/received" > "$out/fake.log" 2>&1 &
+python3 tests/fake_bjnp.py --port $port --busy 2 --ignore-jobs 3 "$out/received" > "$out/fake.log" 2>&1 &
 fake=$!
 relay=
 trap 'kill $fake ${relay:-} 2>/dev/null || true' EXIT
@@ -21,7 +21,7 @@ sample=$build/samples/sample_a4_plain_std.bin
 echo "== id"
 "$build/mx870-bjnp" id 127.0.0.1:$port
 
-echo "== send (printer answers busy twice first)"
+echo "== send (printer ignores the job request 3 times, then answers busy twice)"
 "$build/mx870-bjnp" send 127.0.0.1:$port "$sample" "test page"
 
 echo "== relay (as CUPS would use it: socket://127.0.0.1:19870)"

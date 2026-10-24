@@ -4,9 +4,10 @@ the Windows port monitor (docs/protocole-mx870.md §4.6).
 
 Answers UDP discover/get-id/job-details/close and TCP send (acknowledging
 each chunk, optionally reporting "busy" first), and writes each received job
-to OUTDIR/job-N.bj.
+to OUTDIR/job-N.bj. Can also ignore the first job requests, as a printer busy
+with another job does, while still answering get-id.
 
-Usage: fake_bjnp.py [--port 18611] [--busy 2] OUTDIR
+Usage: fake_bjnp.py [--port 18611] [--busy 2] [--ignore-jobs 1] OUTDIR
 """
 import argparse
 import os
@@ -32,9 +33,10 @@ def parse(h):
 
 
 class Printer:
-    def __init__(self, outdir, busy):
+    def __init__(self, outdir, busy, ignore_jobs):
         self.outdir = outdir
         self.busy = busy
+        self.ignore_jobs = ignore_jobs
         self.session = 0x1234
         self.jobs = 0
         self.log = []
@@ -53,6 +55,9 @@ class Printer:
                 sock.sendto(header(cmd, seq, 0, b'\x00' * 16), addr)
             elif cmd == 0x30:
                 sock.sendto(header(cmd, seq, 0, struct.pack('>H', len(DEVICE_ID) + 2) + DEVICE_ID), addr)
+            elif cmd == 0x10 and self.ignore_jobs:
+                self.ignore_jobs -= 1
+                print('job details ignored (busy with another job)')
             elif cmd == 0x10:
                 assert plen == 392, f'job details payload {plen} != 392'
                 fields = [payload[o:o + n].decode('utf-16-le').rstrip('\0')
@@ -107,9 +112,11 @@ def main():
     ap.add_argument('outdir')
     ap.add_argument('--port', type=int, default=18611)
     ap.add_argument('--busy', type=int, default=0, help='answer "busy" to the first N chunks of each job')
+    ap.add_argument('--ignore-jobs', type=int, default=0,
+                    help='ignore the first N job requests (UDP 0x10), as a printer busy with another job')
     args = ap.parse_args()
     os.makedirs(args.outdir, exist_ok=True)
-    p = Printer(args.outdir, args.busy)
+    p = Printer(args.outdir, args.busy, args.ignore_jobs)
 
     u = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     u.bind(('127.0.0.1', args.port))
