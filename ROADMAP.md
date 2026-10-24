@@ -1,7 +1,8 @@
 # Feuille de route
 
 Ce qui manque au pilote MX870, au 24 octobre 2026, après les premiers essais sur une
-imprimante réelle (firmware 1.030, encres compatibles, papier ordinaire A4). Les constats
+imprimante réelle (firmware 1.030, encres compatibles, papier ordinaire A4). Le pilote CUPS
+installé avec `install.sh --printer` imprime correctement depuis les applications. Les constats
 détaillés sont au §5 de [docs/protocole-mx870.md](docs/protocole-mx870.md).
 
 Rappel de méthode : la référence est le pilote Windows 1.06 et le comportement de
@@ -12,7 +13,6 @@ quotidien, pas une colorimétrie parfaite.
 
 | Fonction | Où | Comment valider |
 |---|---|---|
-| Pilote CUPS installé : file `MX870` + relais BJNP (LaunchDaemon) | `install.sh --printer`, `packaging/org.mx870.bjnp-relay.plist` | imprimer depuis une application, puis enchaîner deux travaux |
 | Application AirPrint (PAPPL) | `src/app/mx870-app.c`, `install.sh --app` | ajouter l'imprimante `bjnp://IP`, imprimer depuis macOS |
 | Recto-verso (bord long, bord court) | `ESC ($`, `ESC (s`, `ESC (u` dans `src/libmx870/encoder.c` | `sample_a4_plain_duplex.bin` puis un document de 2 pages |
 | Ordre de sortie inversé par défaut (sortie face vers le haut) | PPD `*DefaultOutputOrder: Reverse`, PAPPL `output_face_up` | imprimer 3 pages, ordre « Automatique » dans le dialogue |
