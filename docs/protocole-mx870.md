@@ -197,7 +197,7 @@ manipule aussi des commandes XML IVEC (`StartJob`, `VendorCmd/ModeShift`, `EndJo
 | `0x01` | UDP | — | découverte |
 | `0x30` | UDP | — | identifiant IEEE 1284 |
 | `0x10` | UDP | 392 o : 4+4 o, nom machine (64 o UTF‑16), utilisateur (64 o), titre (256 o) | ouverture du travail ; la réponse donne la session (en-tête, offset 10) |
-| `0x21` | TCP | données d'impression | réponse : u32 = octets acceptés ; 0 → occupé, réessai toutes les 500 ms, abandon après 10 s |
+| `0x21` | TCP | données d'impression | réponse : u32 = octets acceptés ; 0 → occupé, réessai toutes les 500 ms, abandon après 10 s sous Windows (5 min ici : le démarrage à froid est plus long) |
 | `0x20` | TCP | — | lecture bidirectionnelle (statut) |
 | `0x11` | UDP | — | fermeture de la session |
 | `0x12`, `0x31`, `0x50`, `0x51` | UDP | divers | non utilisés pour l'impression |
@@ -207,9 +207,23 @@ Implémentation : `src/libbjnp` + outil `mx870-bjnp` (découverte, identifiant, 
 ## 5. Implémentation et points non confirmés
 
 Implémenté dans `src/libmx870` (encodeur), `src/cups` (filtre [CUPS](https://openprinting.github.io/cups/) + PPD généré), `src/libbjnp` et `src/app` (application [PAPPL](https://github.com/michaelrsweet/pappl)).
-Les flux produits sont validés par `tools/bjdump.py` (décodeur indépendant), et le pilote a été
-testé par l'auteur sur une MX870 réelle. Ces essais n'ont pas vérifié un par un les choix suivants,
-non confirmés par les octets Windows, à regarder en premier si l'imprimante rejette un travail :
+Les flux produits sont validés par `tools/bjdump.py` (décodeur indépendant).
+
+**Essais sur une MX870 réelle** (firmware 1.030, région EU, BJNP par Wi-Fi, 24/10/2026) :
+
+- acceptés et imprimés en entier : `sample_letter_plain_draft_gray.bin` (300 dpi, K seul) et
+  `sample_a4_plain_high.bin` (600 dpi, CMYK) ; enveloppe XML IVEC, `ESC (P` 8 octets et
+  `ESC (r 64` ne gênent donc pas l'imprimante ;
+- géométrie, sens de la page et attribution des plans aux encres corrects ;
+- l'imprimante peut refuser les données (accusé 0) plus de 10 s en sortant de veille : un envoi
+  abandonné à 10 s laisse une page imprimée au cinquième ;
+- défauts, avec une vérification des buses impeccable, donc dus au flux : fines lignes blanches
+  horizontales régulières dans toutes les encres, en brouillon comme en qualité haute ; quelques
+  lignes de couleur déposées 2 à 3 mm hors de leur zone alors que les plans du flux sont alignés ;
+  excès d'encre (papier gondolé, tons trop sombres, bleu violacé). Pistes : lignes par bloc
+  (`ESC (J`), puis limite d'encre et courbes de densité du papier ordinaire.
+
+Choix non confirmés par les octets Windows :
 
 | Point | Choix actuel | Alternative |
 |---|---|---|

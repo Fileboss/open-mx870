@@ -33,7 +33,7 @@
 #define HDR_LEN 16
 #define CHUNK 16384           /* data bytes per CMD_SEND */
 #define BUSY_RETRY_MS 500     /* Windows retries a zero acknowledgement every 500 ms */
-#define BUSY_TIMEOUT_MS 10000 /* ... and gives up after 10 s */
+#define BUSY_TIMEOUT_MS 300000 /* Windows gives up after 10 s, too short for a cold start */
 #define UDP_TRIES 3
 
 struct bjnp_job_s {
