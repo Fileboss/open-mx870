@@ -319,6 +319,7 @@ static bool driver_cb(pappl_system_t *system, const char *driver_name, const cha
   dd->sides_supported = PAPPL_SIDES_ONE_SIDED | PAPPL_SIDES_TWO_SIDED_LONG_EDGE |
                         PAPPL_SIDES_TWO_SIDED_SHORT_EDGE;
   dd->sides_default = PAPPL_SIDES_ONE_SIDED;
+  dd->output_face_up = true; /* clients then print last page first, page 1 on top */
 
   dd->num_resolution = 2;
   dd->x_resolution[0] = dd->y_resolution[0] = 300;

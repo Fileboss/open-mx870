@@ -157,6 +157,15 @@ def main(papers_inc, filter_path):
     w('*CloseUI: *Duplex')
     w('')
 
+    # Sheets come out face up: reverse order leaves page 1 on top of the stack.
+    w('*OpenUI *OutputOrder/Output Order: PickOne')
+    w('*OrderDependency: 10 AnySetup *OutputOrder')
+    w('*DefaultOutputOrder: Reverse')
+    w('*OutputOrder Normal/Normal: ""')
+    w('*OutputOrder Reverse/Reverse: ""')
+    w('*CloseUI: *OutputOrder')
+    w('')
+
     # Duplex is for plain paper with a border, as in the Windows driver's modes.
     for name, _, photo in media:
         if photo == '1':

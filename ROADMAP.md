@@ -15,6 +15,7 @@ quotidien, pas une colorimétrie parfaite.
 | Pilote CUPS installé : file `MX870` + relais BJNP (LaunchDaemon) | `install.sh --printer`, `packaging/org.mx870.bjnp-relay.plist` | imprimer depuis une application, puis enchaîner deux travaux |
 | Application AirPrint (PAPPL) | `src/app/mx870-app.c`, `install.sh --app` | ajouter l'imprimante `bjnp://IP`, imprimer depuis macOS |
 | Recto-verso (bord long, bord court) | `ESC ($`, `ESC (s`, `ESC (u` dans `src/libmx870/encoder.c` | `sample_a4_plain_duplex.bin` puis un document de 2 pages |
+| Ordre de sortie inversé par défaut (sortie face vers le haut) | PPD `*DefaultOutputOrder: Reverse`, PAPPL `output_face_up` | imprimer 3 pages, ordre « Automatique » dans le dialogue |
 | Choix du bac (arrière, cassette) | `ESC (l` | une page par bac |
 | Sans bordure | marges négatives, `ESC (p` | photo 10 × 15 sur papier photo |
 | USB (application AirPrint) | PAPPL | brancher en USB, imprimer |
