@@ -14,10 +14,17 @@
  * CHART "rows": two rows, black then cyan, of sixteen patches; patch k inks
  * only raster line k of every 16 (full ink). A patch that stays blank shows a
  * line position the printer drops in each block.
+ *
+ * CHART "colors": nine rows of document colors (blues, greens, red, orange,
+ * skin, mid gray), each in five columns of increasing correction, applied to
+ * the RGB input as the encoder would to ink amounts: ink^gamma, then a total
+ * ink limit on chromatic colors. Columns: none; gamma 1.5; gamma 1.5 + 150 %;
+ * gamma 2 + 150 %; gamma 2 + 120 %.
  */
 
 #include "../libmx870/mx870.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -83,20 +90,64 @@ static void rows_line(uint8_t *rgb, int w, int dpi, int y, int page)
   }
 }
 
+static const uint8_t colors[9][3] = {
+  {0, 0, 255}, {47, 84, 150}, {68, 114, 196}, {0, 176, 80}, {112, 173, 71},
+  {192, 0, 0}, {237, 125, 49}, {250, 200, 160}, {128, 128, 128}};
+static const struct { double gamma; int limit; } variants[5] = {
+  {1.0, 400}, {1.5, 400}, {1.5, 150}, {2.0, 150}, {2.0, 120}};
+
+/* Apply a variant to one RGB color, in the ink domain (ink = 255 - channel). */
+static void correct(const uint8_t *in, uint8_t *out, double gamma, int limit)
+{
+  double ink[3], total = 0;
+  int mn = 255, mx = 0;
+
+  for (int i = 0; i < 3; i++) {
+    ink[i] = 255.0 * pow((255 - in[i]) / 255.0, gamma);
+    total += ink[i];
+    mn = in[i] < mn ? in[i] : mn;
+    mx = in[i] > mx ? in[i] : mx;
+  }
+  /* Neutrals become black ink only in the encoder: no limit for them. */
+  if (mx - mn >= 48 && total > limit * 255 / 100.0)
+    for (int i = 0; i < 3; i++)
+      ink[i] *= limit * 255 / 100.0 / total;
+  for (int i = 0; i < 3; i++)
+    out[i] = (uint8_t)lround(255 - ink[i]);
+}
+
+/* Line y (1/600 inch) of the colors chart: rows of 1 cm, 4 mm apart, from 15 mm down. */
+static void colors_line(uint8_t *rgb, int w, int dpi, int y, int page)
+{
+  int row = (y - 354) / 330, in_row = (y - 354) % 330;
+  uint8_t patch[5][3];
+
+  page_marks(rgb, w, dpi, y, page);
+  if (y < 354 || row > 8 || in_row >= 236)
+    return;
+  for (int c = 0; c < 5; c++)
+    correct(colors[row], patch[c], variants[c].gamma, variants[c].limit);
+  for (int x = 0; x < w; x++) {
+    int x600 = x * 600 / dpi, col = x600 / 960;
+
+    if (col < 5 && x600 % 960 < 900)
+      memcpy(rgb + 3 * x, patch[col], 3);
+  }
+}
+
 int main(int argc, char **argv)
 {
   mx870_page_settings_t s = {0};
   mx870_job_t *job;
   FILE *f;
   int rc = 0;
+  const char *chart;
 
-  int rows;
-
-  if (argc < 5 || (strcmp(argv[3], "levels") && strcmp(argv[3], "rows"))) {
-    fprintf(stderr, "usage: mx870-testpage OUT draft|standard|high levels|rows LINES...\n");
+  if (argc < 5 || (strcmp(argv[3], "levels") && strcmp(argv[3], "rows") && strcmp(argv[3], "colors"))) {
+    fprintf(stderr, "usage: mx870-testpage OUT draft|standard|high levels|rows|colors LINES...\n");
     return 2;
   }
-  rows = !strcmp(argv[3], "rows");
+  chart = argv[3];
   s.paper = mx870_find_paper("iso_a4_210x297mm");
   s.media = mx870_find_media("stationery");
   s.quality = !strcmp(argv[2], "draft") ? MX870_QUALITY_DRAFT
@@ -120,8 +171,10 @@ int main(int argc, char **argv)
     mx870_page_geometry(job, &w, &h, &dpi, NULL, NULL);
     line = malloc((size_t)w * 3);
     for (int y = 0; y < h && !rc; y++) {
-      if (rows)
+      if (!strcmp(chart, "rows"))
         rows_line(line, w, dpi, y, p - 3);
+      else if (!strcmp(chart, "colors"))
+        colors_line(line, w, dpi, y * 600 / dpi, p - 3);
       else
         chart_line(line, w, dpi, y * 600 / dpi, p - 3);
       rc = mx870_page_write_line(job, line);

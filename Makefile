@@ -94,7 +94,7 @@ $(BUILD)/rastertomx870: src/cups/rastertomx870.c $(LIB)
 	$(CC) $(CFLAGS) $(ARCHFLAGS) -Wno-deprecated-declarations $< $(LIB) -lcups -o $@
 
 $(BUILD)/mx870-testpage: src/tools/mx870-testpage.c $(LIB)
-	$(CC) $(CFLAGS) $(ARCHFLAGS) $< $(LIB) -o $@
+	$(CC) $(CFLAGS) $(ARCHFLAGS) $< $(LIB) -lm -o $@
 
 $(BUILD)/test_mx870: tests/test_mx870.c $(LIB)
 	$(CC) $(CFLAGS) $(ARCHFLAGS) $< $(LIB) -o $@

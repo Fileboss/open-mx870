@@ -238,6 +238,13 @@ Les flux produits sont validés par `tools/bjdump.py` (décodeur indépendant).
   La règle de sélection de Windows entre les deux reste à lire (base de données lue par une
   interface générique, sans pointeur direct vers les enregistrements).
 
+- couleurs (papier ordinaire, encres compatibles, mire `mx870-testpage colors`) : la
+  séparation linéaire sortait trop sombre (vert, bleu) et le bleu violet. Correction retenue
+  dans `src/libmx870/color.c` : 35 % du recouvrement cyan/magenta retiré du magenta, chaque
+  encre au carré, encre totale plafonnée à 120 % (160 % pour les rouges). Une variante qui
+  conserve les proportions entre encres a été jugée moins bonne. Les tables d'étalonnage du
+  pilote Windows (`cnmdump5.dll`) ne sont pas exploitées.
+
 Choix non confirmés par les octets Windows :
 
 | Point | Choix actuel | Alternative |

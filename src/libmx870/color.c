@@ -31,7 +31,7 @@ void mx870_separate(const mx870_job_t *job, const uint8_t *line, int16_t *out)
   memset(out, 0, (size_t)w * (size_t)job->nplanes * sizeof(int16_t));
 
   for (int x = 0; x < w; x++) {
-    int r, g, b, c, m, y, k;
+    int r, g, b, c, m, y, k, chroma;
 
     if (gray_in) {
       r = g = b = line[x];
@@ -56,19 +56,50 @@ void mx870_separate(const mx870_job_t *job, const uint8_t *line, int16_t *out)
     {
       int mn = c < m ? (c < y ? c : y) : (m < y ? m : y);
       int mx = c > m ? (c > y ? c : y) : (m > y ? m : y);
-      int chroma = mx - mn;
+      int neutral;
+
+      chroma = mx - mn;
       /*
        * Black generation must be continuous or gradients crossing gray show
        * seams: full GCR for neutrals (crisp black text), easing to a gentle
        * k = mn^2/255 that keeps colors saturated once chroma exceeds 48.
        */
-      int neutral = chroma >= 48 ? 0 : 255 - chroma * 255 / 48;
+      neutral = chroma >= 48 ? 0 : 255 - chroma * 255 / 48;
 
       k = (mn * neutral + (mn * mn / 255) * (255 - neutral)) / 255;
     }
     c -= k;
     m -= k;
     y -= k;
+
+    if (!job->settings.media->photo) {
+      /*
+       * Plain-paper correction, chosen on the user's MX870 (third-party inks)
+       * from printed charts (mx870-testpage colors): Canon magenta turns blues
+       * violet, so remove 35 % of the cyan/magenta overlap from magenta where
+       * yellow is absent; then square each ink (ink gain darkens mid tones)
+       * and cap chromatic colors at 120 % total ink, rising to 160 % for reds
+       * (magenta + yellow without cyan), which wash out under the lower cap.
+       * Scaling all inks by the dominant one instead (hue-preserving) printed
+       * worse. Not calibrated for photo media.
+       */
+      int overlap = c < m ? c : m;
+      int red = (m < y ? m : y) - c;
+      int total, limit;
+
+      m -= overlap * 35 * (255 - y) / (100 * 255);
+      c = (c * c + 127) / 255;
+      m = (m * m + 127) / 255;
+      y = (y * y + 127) / 255;
+      k = (k * k + 127) / 255;
+      total = c + m + y;
+      limit = 306 + (red > 0 ? red * 102 / 255 : 0);
+      if (chroma >= 48 && total > limit) {
+        c = c * limit / total;
+        m = m * limit / total;
+        y = y * limit / total;
+      }
+    }
 
     if (ci >= 0)
       out[ci * w + x] = (int16_t)c;
