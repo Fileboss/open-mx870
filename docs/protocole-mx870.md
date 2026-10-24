@@ -227,9 +227,16 @@ Les flux produits sont validés par `tools/bjdump.py` (décodeur indépendant).
   d'un bloc de 16 lignes (0,68 mm), à toutes les intensités, alors que chaque ligne du bloc
   s'imprime ; 8 lignes par bloc à 600 dpi double la hauteur de la page (l'imprimante avance de
   16 lignes par bloc) ;
-- piste : `cnmop9z.dll` convertit les niveaux de trame en codes de point par les tables de
-  `0x66526088` (`00 00 01 03 03 06 06 04 09 09`, `00 01 01 01 03 03 06 09 08 0b`…), que
-  l'encodeur n'applique pas : il envoie le niveau tel quel.
+- les tables de `0x66526088` de `cnmop9z.dll` (`00 00 01 03 03 06 06 04 09 09`…) ne servent
+  qu'au mode 7 (`FUN_665227c9`, appelée si le champ `+0x7fc` vaut 7) ; ailleurs les valeurs du
+  moteur de trame sont copiées telles quelles (`FUN_6652249d`) ;
+- `cnm_0367.dll` a deux enregistrements papier ordinaire `ESC (c 30 00 03` : C/M 3 niveaux
+  (5 px/octet) et C/M 6 niveaux sur 4 bits. Avec le premier, la qualité haute sort propre
+  (très légères lignes sur le noir seulement) ; avec le second, lignes au pas du bloc.
+  `tools/gen_modes.py` écarte donc les enregistrements papier ordinaire à 6 niveaux ;
+  la qualité haute en niveaux de gris (`0x31`, qui n'a que ce type) retombe sur la qualité 2.
+  La règle de sélection de Windows entre les deux reste à lire (base de données lue par une
+  interface générique, sans pointeur direct vers les enregistrements).
 
 Choix non confirmés par les octets Windows :
 
@@ -240,7 +247,7 @@ Choix non confirmés par les octets Windows :
 | `ESC (r 64` | envoyé (Gutenprint) | absent des gabarits Windows |
 | Lignes par bloc | 16 à 600 dpi, 8 à 300 dpi | Windows utilise 8 dans certains modes 600 dpi |
 | Marge haute 118 | supposée liée au recto-verso | sens réel inconnu |
-| Recto-verso | `ESC ($` une fois par travail, `ESC (s 00` à chaque page, `ESC (u 01` sur les versos en bord long ; variante de mode choisie par `tools/gen_modes.py` (heuristique) | vérifié seulement par `bjdump` (`sample_a4_plain_duplex.bin`) |
+| Recto-verso | `ESC ($` une fois par travail, `ESC (s 00` à chaque page, `ESC (u 01` sur les versos en bord long ; même enregistrement de mode que le recto (C/M 3 niveaux) | vérifié seulement par `bjdump` (`sample_a4_plain_duplex.bin`) |
 | Mode 7 (Pro II qualité 4) | exclu | plans supplémentaires `C|0x80`… non décodés |
 
 Réseau (BJNP, §4.6) : validé contre `tests/fake_bjnp.py`, écrit d'après la même lecture du

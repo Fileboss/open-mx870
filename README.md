@@ -9,9 +9,10 @@ Windows 1.06 (voir [docs/protocole-mx870.md](docs/protocole-mx870.md)).
 > Canon Inc., citées uniquement pour désigner le matériel compatible.
 
 > **État : imprime sur une MX870 réelle (firmware 1.030).** Découverte et envoi BJNP par
-> Wi-Fi, géométrie et ordre des encres corrects. La qualité standard (par défaut) sort
-> propre ; la qualité haute produit encore des lignes blanches régulières et trop d'encre,
-> et les couleurs ne sont pas étalonnées. Détails au §5 du document de protocole.
+> Wi-Fi, géométrie et ordre des encres corrects, qualités standard (par défaut) et haute
+> propres sur papier ordinaire. Restent : couleurs non étalonnées (trop d'encre sur les
+> aplats), très légères lignes sur le noir en qualité haute, papiers photo non essayés.
+> Détails au §5 du document de protocole.
 
 ## Apportez votre propre pilote Canon
 
