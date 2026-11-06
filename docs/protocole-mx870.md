@@ -204,12 +204,12 @@ manipule aussi des commandes XML IVEC (`StartJob`, `VendorCmd/ModeShift`, `EndJo
 
 Implémentation : `src/libbjnp` + outil `mx870-bjnp` (découverte, identifiant, envoi d'un fichier).
 
-## 5. Implémentation et points à valider sur l'imprimante
+## 5. Implémentation et points non confirmés
 
 Implémenté dans `src/libmx870` (encodeur), `src/cups` (filtre [CUPS](https://openprinting.github.io/cups/) + PPD généré), `src/libbjnp` et `src/app` (application [PAPPL](https://github.com/michaelrsweet/pappl)).
-Les flux produits sont validés par `tools/bjdump.py` (décodeur indépendant) ; **aucun n'a encore
-été envoyé à une MX870 réelle**. Choix non confirmés par les octets Windows, à vérifier en premier
-si l'imprimante rejette un travail :
+Les flux produits sont validés par `tools/bjdump.py` (décodeur indépendant), et le pilote a été
+testé par l'auteur sur une MX870 réelle. Ces essais n'ont pas vérifié un par un les choix suivants,
+non confirmés par les octets Windows, à regarder en premier si l'imprimante rejette un travail :
 
 | Point | Choix actuel | Alternative |
 |---|---|---|
@@ -226,4 +226,5 @@ protocole ; à confirmer sur l'imprimante : encodage UTF‑16 LE des champs de `
 alors que d'autres implémentations utilisent BE, taille des blocs `0x21` (16 Kio choisis).
 
 Restent à faire : Language Monitor (`cnmlmon2.dll` : statut, niveaux d'encre via IVEC
-`GetStatus`), étalonnage couleur sur tirages réels.
+`GetStatus`), publication des réglages faits pendant les essais réels (timeouts, teintes adaptées
+à des encres non officielles).

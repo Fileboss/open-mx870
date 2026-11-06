@@ -8,9 +8,11 @@ Windows 1.06 (voir [docs/protocole-mx870.md](docs/protocole-mx870.md)).
 > **Projet indépendant, non affilié à Canon Inc.** Canon et PIXMA sont des marques de
 > Canon Inc., citées uniquement pour désigner le matériel compatible.
 
-> **État : non testé sur l'imprimante réelle.** Les flux sont validés par un décodeur
-> indépendant (`tools/bjdump.py`) et un simulateur BJNP (`tests/fake_bjnp.py`).
-> Les points à vérifier en premier sont listés au §5 du document de protocole.
+> **État : testé par l'auteur sur une MX870 réelle.** Les flux sont aussi validés par un
+> décodeur indépendant (`tools/bjdump.py`) et un simulateur BJNP (`tests/fake_bjnp.py`).
+> Les réglages faits pendant ces essais (timeouts, teintes adaptées à des encres non
+> officielles) ne sont pas encore publiés dans ce dépôt. Les points que ces essais n'ont pas
+> vérifiés un par un sont listés au §5 du document de protocole.
 
 ## Apportez votre propre pilote Canon
 
