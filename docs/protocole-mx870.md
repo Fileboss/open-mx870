@@ -262,5 +262,4 @@ protocole ; à confirmer sur l'imprimante : encodage UTF‑16 LE des champs de `
 alors que d'autres implémentations utilisent BE, taille des blocs `0x21` (16 Kio choisis).
 
 Restent à faire : Language Monitor (`cnmlmon2.dll` : statut, niveaux d'encre via IVEC
-`GetStatus`), publication des réglages faits pendant les essais réels (timeouts, teintes adaptées
-à des encres non officielles).
+`GetStatus`). Liste complète : [ROADMAP.md](../ROADMAP.md).
